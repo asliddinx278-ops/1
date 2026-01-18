@@ -1,0 +1,26 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Restoran Menyu</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+<body>
+  <h2>🍽 Menyu</h2>
+  <button onclick="order()">Lag'mon - 25,000 so‘m</button>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+
+    function order() {
+      const data = {
+        name: tg.initDataUnsafe.user.first_name,
+        phone: "+998901234567",
+        order: "Lag'mon x1",
+        total: 25000
+      };
+      tg.sendData(JSON.stringify(data));
+    }
+  </script>
+</body>
+</html>
