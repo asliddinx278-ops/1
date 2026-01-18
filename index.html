@@ -17,17 +17,17 @@
   <div class="item">
     <span>Lag‘mon</span>
     <span>25 000 so‘m</span>
-    <button onclick="add('Lag‘mon',25000)">Qoshish</button>
+    <button onclick="add('Lag‘mon',25000)">Qo‘shish</button>
   </div>
   <div class="item">
     <span>Shashlik</span>
     <span>18 000 so‘m</span>
-    <button onclick="add('Shashlik',18000)">Qoshish</button>
+    <button onclick="add('Shashlik',18000)">Qo‘shish</button>
   </div>
   <div class="item">
     <span>Cola 0,5</span>
     <span>7 000 so‘m</span>
-    <button onclick="add('Cola 0,5',7000)">Qoshish</button>
+    <button onclick="add('Cola 0,5',7000)">Qo‘shish</button>
   </div>
 
   <script>
@@ -42,18 +42,18 @@
       tg.MainButton.setText(`✅ Buyurtma berish (${cart.length})`);
     }
 
-    tg.onEvent('mainButtonClicked', () => {
+    Telegram.WebApp.onEvent('mainButtonClicked', () => {
       if(!cart.length) return;
 
       const total = cart.reduce((s,i)=>s+i.price, 0);
       const payload = JSON.stringify({
         name: tg.initDataUnsafe.user.first_name,
-        phone: '+998901234567', // kerak bo‘lsa input qo‘shing
+        phone: '+998901234567',
         order: cart.map(i=>`${i.name}×1`).join(', '),
         total
       });
 
-      // bu chaqiruv botdagi web_app_data eventini keltirib chiqaradi
+      // shu chaqiruv botdagi web_app_data eventini keltirib chiqaradi
       tg.sendData(payload);
     });
   </script>
