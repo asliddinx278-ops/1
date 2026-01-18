@@ -1,37 +1,61 @@
-const { Telegraf } = require('telegraf');
-const bot = new Telegraf('7896924437:AAHlbtMj-Zs4grZlviqTD7JwLKhPAIZX1so');
-const adminChatId = '7961099561';
+<!DOCTYPE html>
+<html lang="uz">
+<head>
+  <meta charset="UTF-8"/>
+  <title>Restoran Menyu</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f7f7f7}
+    h2{margin-top:0}
+    .item{display:flex;justify-content:space-between;align-items:center;background:#fff;margin:10px 0;padding:12px 16px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    button{background:#007bff;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer}
+  </style>
+</head>
+<body>
+  <h2>🍽 Menyu</h2>
 
-bot.start((ctx) => {
-  ctx.reply('🍽 Menyu:', {
-    reply_markup: {
-      inline_keyboard: [[
-        { text: 'Menyu', web_app: { url: 'https://1-two-azure.vercel.app' } }
-      ]]
+  <div class="item">
+    <span>Lag‘mon</span>
+    <span>25 000 so‘m</span>
+    <button onclick="add('Lag‘mon',25000)">Qoshish</button>
+  </div>
+  <div class="item">
+    <span>Shashlik</span>
+    <span>18 000 so‘m</span>
+    <button onclick="add('Shashlik',18000)">Qoshish</button>
+  </div>
+  <div class="item">
+    <span>Cola 0,5</span>
+    <span>7 000 so‘m</span>
+    <button onclick="add('Cola 0,5',7000)">Qoshish</button>
+  </div>
+
+  <script>
+    const tg = window.Telegram.WebApp;
+    tg.expand();
+    tg.MainButton.setText("✅ Buyurtma berish").show();
+
+    let cart = [];
+
+    function add(name, price){
+      cart.push({name, price});
+      tg.MainButton.setText(`✅ Buyurtma berish (${cart.length})`);
     }
-  });
-});
 
-bot.on('web_app_data', async (ctx) => {
-  const data = JSON.parse(ctx.webAppData.data.json());
+    tg.onEvent('mainButtonClicked', () => {
+      if(!cart.length) return;
 
-  const message =
-    `🆕 Yangi buyurtma!\n\n` +
-    `👤 Ism: ${data.name}\n` +
-    `📞 Telefon: ${data.phone}\n` +
-    `🛍 Buyurtma: ${data.order}\n` +
-    `💰 Jami: ${data.total} so‘m`;
+      const total = cart.reduce((s,i)=>s+i.price, 0);
+      const payload = JSON.stringify({
+        name: tg.initDataUnsafe.user.first_name,
+        phone: '+998901234567', // kerak bo‘lsa input qo‘shing
+        order: cart.map(i=>`${i.name}×1`).join(', '),
+        total
+      });
 
-  // adminga yuborish
-  await ctx.telegram.sendMessage(adminChatId, message);
-
-  // foydalanuvchiga natija qaytarib, WebApp-ni yopamiz
-  await ctx.answerWebAppQuery(ctx.webAppData.query_id, {
-    type: 'article',
-    id: ctx.webAppData.query_id,
-    title: '✅ Buyurtma qabul qilindi',
-    input_message_content: { message_text: 'Buyurtmangiz adminga yuborildi, tez orada siz bilan bog‘lanamiz!' }
-  });
-});
-
-bot.launch(() => console.log('✅ Bot ishga tushdi!'));
+      // bu chaqiruv botdagi web_app_data eventini keltirib chiqaradi
+      tg.sendData(payload);
+    });
+  </script>
+</body>
+</html>
