@@ -42,8 +42,13 @@
       tg.MainButton.setText(`✅ Buyurtma berish (${cart.length})`);
     }
 
+    /* ========== DEBUG ========== */
     Telegram.WebApp.onEvent('mainButtonClicked', () => {
-      if(!cart.length) return;
+      console.log('[DEBUG] mainButton clicked');
+      if (!cart.length) {
+        console.log('[DEBUG] cart empty, return');
+        return;
+      }
 
       const total = cart.reduce((s,i)=>s+i.price, 0);
       const payload = JSON.stringify({
@@ -53,9 +58,15 @@
         total
       });
 
-      // shu chaqiruv botdagi web_app_data eventini keltirib chiqaradi
-      tg.sendData(payload);
+      console.log('[DEBUG] sendData payload:', payload);
+      try {
+        Telegram.WebApp.sendData(payload);
+        console.log('[DEBUG] sendData SUCCESS');
+      } catch (e) {
+        console.error('[DEBUG] sendData ERROR:', e);
+      }
     });
+    /* =========================== */
   </script>
 </body>
 </html>
