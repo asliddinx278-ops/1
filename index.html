@@ -1,25 +1,48 @@
 <!DOCTYPE html>
-<html>
+<html lang="uz">
 <head>
+  <meta charset="UTF-8"/>
   <title>Restoran Menyu</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f7f7f7}
+    h2{margin-top:0}
+    .item{display:flex;justify-content:space-between;align-items:center;background:#fff;margin:10px 0;padding:12px 16px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
+    button{background:#007bff;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer}
+    button:hover{background:#0056b3}
+  </style>
 </head>
 <body>
   <h2>🍽 Menyu</h2>
-  <button onclick="order()">Lag'mon - 25,000 so‘m</button>
+
+  <div class="item">
+    <span>Lag‘mon</span>
+    <span>25 000 so‘m</span>
+    <button onclick="order('Lag‘mon',25000)">Buyurtma</button>
+  </div>
+  <div class="item">
+    <span>Shashlik</span>
+    <span>18 000 so‘m</span>
+    <button onclick="order('Shashlik',18000)">Buyurtma</button>
+  </div>
+  <div class="item">
+    <span>Cola 0,5</span>
+    <span>7 000 so‘m</span>
+    <button onclick="order('Cola 0,5',7000)">Buyurtma</button>
+  </div>
 
   <script>
     const tg = window.Telegram.WebApp;
-    tg.expand();
+    tg.expand(); // toʻliq ekran
 
-    function order() {
-      const data = {
+    function order(name, price){
+      const payload = {
         name: tg.initDataUnsafe.user.first_name,
-        phone: "+998901234567",
-        order: "Lag'mon x1",
-        total: 25000
+        phone: "+998901234567", // kerak boʻlsa foydalanuvchi kiritadi
+        order: `${name} ×1`,
+        total: price
       };
-      tg.sendData(JSON.stringify(data));
+      tg.sendData(JSON.stringify(payload)); // botga yuboradi
     }
   </script>
 </body>
