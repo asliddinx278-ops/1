@@ -8,7 +8,8 @@
     body{font-family:Arial,Helvetica,sans-serif;padding:20px;background:#f7f7f7}
     h2{margin-top:0}
     .item{display:flex;justify-content:space-between;align-items:center;background:#fff;margin:10px 0;padding:12px 16px;border-radius:8px;box-shadow:0 2px 4px rgba(0,0,0,.1)}
-    button{background:#007bff;color:#fff;border:none;padding:8px 14px;border-radius:6px;cursor:pointer}
+    button.add{background:#007bff;color:#fff;border:none;padding:6px 12px;border-radius:5px;cursor:pointer}
+    #orderBtn{display:none;width:100%;margin-top:15px;background:#28a745;color:#fff;font-size:18px;padding:12px;border:none;border-radius:8px;cursor:pointer}
   </style>
 </head>
 <body>
@@ -17,56 +18,64 @@
   <div class="item">
     <span>Lag‘mon</span>
     <span>25 000 so‘m</span>
-    <button onclick="add('Lag‘mon',25000)">Qo‘shish</button>
+    <button class="add" onclick="add('Lag‘mon',25000)">Qo‘shish</button>
   </div>
   <div class="item">
     <span>Shashlik</span>
     <span>18 000 so‘m</span>
-    <button onclick="add('Shashlik',18000)">Qo‘shish</button>
+    <button class="add" onclick="add('Shashlik',18000)">Qo‘shish</button>
   </div>
   <div class="item">
     <span>Cola 0,5</span>
     <span>7 000 so‘m</span>
-    <button onclick="add('Cola 0,5',7000)">Qo‘shish</button>
+    <button class="add" onclick="add('Cola 0,5',7000)">Qo‘shish</button>
   </div>
+
+  <!-- universal knopka -->
+  <button id="orderBtn" onclick="sendOrder()">✅ Buyurtma berish</button>
 
   <script>
     const tg = window.Telegram.WebApp;
-    tg.expand();
-    tg.MainButton.setText("✅ Buyurtma berish").show();
-
     let cart = [];
 
     function add(name, price){
       cart.push({name, price});
-      tg.MainButton.setText(`✅ Buyurtma berish (${cart.length})`);
+      document.getElementById('orderBtn').style.display = 'block';
+      document.getElementById('orderBtn').textContent = `✅ Buyurtma berish (${cart.length})`;
     }
 
-    /* ========== DEBUG ========== */
-    Telegram.WebApp.onEvent('mainButtonClicked', () => {
-      console.log('[DEBUG] mainButton clicked');
-      if (!cart.length) {
-        console.log('[DEBUG] cart empty, return');
+    function sendOrder(){
+      if(!cart.length) return;
+
+      const total = cart.reduce((s,i)=>s+i.price, 0);
+      const payload = {
+        name: tg && tg.initDataUnsafe && tg.initDataUnsafe.user
+               ? tg.initDataUnsafe.user.first_name
+               : prompt('Ismingiz:') || 'Anonim',
+        phone: prompt('Telefon: +998') || '+998901234567',
+        order: cart.map(i=>`${i.name}×1`).join(', '),
+        total
+      };
+
+      /* ---------- Telegram WebApp ---------- */
+      if(tg && tg.sendData){
+        tg.sendData(JSON.stringify(payload));
         return;
       }
 
-      const total = cart.reduce((s,i)=>s+i.price, 0);
-      const payload = JSON.stringify({
-        name: tg.initDataUnsafe.user.first_name,
-        phone: '+998901234567',
-        order: cart.map(i=>`${i.name}×1`).join(', '),
-        total
-      });
+      /* ---------- Oddiy brauzer ---------- */
+      fetch('https://1-two-azure.vercel.app/order', {
+        method : 'POST',
+        headers: {'Content-Type':'application/json'},
+        body   : JSON.stringify(payload)
+      })
+      .then(r => r.text())
+      .then(msg => alert(msg))
+      .catch(err => alert('Xato: ' + err));
+    }
 
-      console.log('[DEBUG] sendData payload:', payload);
-      try {
-        Telegram.WebApp.sendData(payload);
-        console.log('[DEBUG] sendData SUCCESS');
-      } catch (e) {
-        console.error('[DEBUG] sendData ERROR:', e);
-      }
-    });
-    /* =========================== */
+    /* Telegram bo‘lsa expand qilamiz */
+    if(tg) tg.expand();
   </script>
 </body>
 </html>
