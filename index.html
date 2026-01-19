@@ -9,24 +9,19 @@
   <div class="brand" id="brand">BODRUM</div>
 
   <main id="content">
-    <!-- ===== 1. MENYU ===== -->
     <section id="menu" class="tab-content active">
       <div class="menu-grid" id="menuGrid"></div>
     </section>
 
-    <!-- ===== 2. SAVAT ===== -->
     <section id="cart" class="tab-content">
       <div id="cartList"></div>
       <div id="cartTotal">Umumiy: 0 so‘m</div>
       <button id="orderBtn">Buyurtma berish</button>
     </section>
 
-    <!-- ===== 3. PROFIL ===== -->
     <section id="profile" class="tab-content">
       <div class="prof-card">
         <div class="prof-header">Profil</div>
-
-        <!-- Malumotlar -->
         <div class="sect">
           <div class="sect-title">Ma’lumotlar</div>
           <div class="input-group">
@@ -39,8 +34,6 @@
           </div>
           <button id="saveProf" class="prof-btn">Saqlash</button>
         </div>
-
-        <!-- Buyurtmalar -->
         <div class="sect">
           <div class="sect-title">Buyurtmalar</div>
           <div id="ordersList" class="orders-list">Hali buyurtma yo‘q</div>
@@ -48,6 +41,22 @@
       </div>
     </section>
   </main>
+
+  <!-- ===== MODAL: ISM & TELEFON ===== -->
+  <div id="profModal" class="modal-overlay">
+    <div class="modal-box">
+      <div class="modal-title">Ma’lumotlarni to‘ldiring</div>
+      <div class="input-group">
+        <input id="modalName" type="text" required maxlength="30"/>
+        <label>Ismingiz</label>
+      </div>
+      <div class="input-group">
+        <input id="modalPhone" type="tel" required pattern="[0-9]{9}" maxlength="9"/>
+        <label>Telefon (+998)</label>
+      </div>
+      <button id="modalSave" class="prof-btn">Davom etish</button>
+    </div>
+  </div>
 
   <!-- ===== PASTKI 3 TAB ===== -->
   <nav class="bottom-bar">
