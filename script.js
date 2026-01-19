@@ -8,30 +8,12 @@ document.querySelectorAll('.tab').forEach(btn => {
   });
 });
 
-// ===== MODAL ELEMENTS =====
+// ===== MODAL =====
 const profModal   = document.getElementById('profModal');
 const modalName   = document.getElementById('modalName');
 const modalPhone  = document.getElementById('modalPhone');
 const modalSave   = document.getElementById('modalSave');
 
-// ===== PROFILE LOAD / SAVE =====
-function loadProfile() {
-  const saved = localStorage.getItem('bodrumProfile');
-  if (saved) {
-    const { name, phone } = JSON.parse(saved);
-    document.getElementById('inpName').value  = name;
-    document.getElementById('inpPhone').value = phone;
-    modalName.value  = name;
-    modalPhone.value = phone;
-  }
-}
-function saveProfile(name, phone) {
-  localStorage.setItem('bodrumProfile', JSON.stringify({ name, phone }));
-  document.getElementById('inpName').value  = name;
-  document.getElementById('inpPhone').value = phone;
-}
-
-// ===== MODAL OPEN / CLOSE =====
 function openProfModal() { profModal.classList.add('show'); }
 function closeProfModal() { profModal.classList.remove('show'); }
 
@@ -44,12 +26,18 @@ modalSave.addEventListener('click', () => {
   getLocationAndFinish();
 });
 
-// ===== CART & ORDER =====
-const menuGrid = document.getElementById('menuGrid');
-const cartList = document.getElementById('cartList');
-const cartBadge = document.getElementById('cartBadge');
-const cartTotal = document.getElementById('cartTotal');
-const orderBtn = document.getElementById('orderBtn');
+function saveProfile(name, phone) {
+  localStorage.setItem('bodrumProfile', JSON.stringify({ name, phone }));
+  document.getElementById('inpName').value  = name;
+  document.getElementById('inpPhone').value = phone;
+}
+
+// ===== CART =====
+const menuGrid   = document.getElementById('menuGrid');
+const cartList   = document.getElementById('cartList');
+const cartBadge  = document.getElementById('cartBadge');
+const cartTotal  = document.getElementById('cartTotal');
+const orderBtn   = document.getElementById('orderBtn');
 
 let cart = [];
 
@@ -60,6 +48,7 @@ const menu = [
   { id: 4, name: 'Klyukva-Burger',        price: 44000, img: 'https://i.imgur.com/4.jpg' },
 ];
 
+// ===== RENDER MENU =====
 menu.forEach(item => {
   const card = document.createElement('div');
   card.className = 'card';
@@ -67,32 +56,68 @@ menu.forEach(item => {
     <img src="${item.img}" alt="${item.name}">
     <h3>${item.name}</h3>
     <div class="price">${item.price.toLocaleString()} so‘m</div>
-    <button data-id="${item.id}">Savatchaga</button>
+    <div class="add-line">
+      <div class="qty-bar">
+        <button class="qty-btn" data-id="${item.id}" data-act="-">−</button>
+        <span class="qty-val" id="qty-${item.id}">1</span>
+        <button class="qty-btn" data-id="${item.id}" data-act="+">+</button>
+      </div>
+      <button class="add-btn" data-id="${item.id}">Savatchaga</button>
+    </div>
   `;
   menuGrid.appendChild(card);
 });
 
+// ===== MENU QTY +/- =====
 menuGrid.addEventListener('click', e => {
-  if (e.target.tagName === 'BUTTON') {
+  const id = e.target.dataset.id;
+  if (!id) return;
+  const qtyEl = document.getElementById(`qty-${id}`);
+  let qty = parseInt(qtyEl.textContent);
+  if (e.target.dataset.act === '+') qty++;
+  if (e.target.dataset.act === '-') qty = Math.max(1, qty - 1);
+  qtyEl.textContent = qty;
+});
+
+// ===== ADD TO CART =====
+menuGrid.addEventListener('click', e => {
+  if (e.target.classList.contains('add-btn')) {
     const id = parseInt(e.target.dataset.id);
+    const qty = parseInt(document.getElementById(`qty-${id}`).textContent);
     const product = menu.find(p => p.id === id);
     const existing = cart.find(c => c.id === id);
-    if (existing) existing.qty++;
-    else cart.push({ ...product, qty: 1 });
+    if (existing) existing.qty += qty;
+    else cart.push({ ...product, qty });
     renderCart();
+    // reset qty to 1
+    document.getElementById(`qty-${id}`).textContent = 1;
   }
 });
 
+// ===== RENDER CART (rasmdagidek) =====
 function renderCart() {
   cartList.innerHTML = '';
   let total = 0;
-  cart.forEach(item => {
+  cart.forEach((item, idx) => {
     total += item.price * item.qty;
     const div = document.createElement('div');
     div.className = 'cart-item';
     div.innerHTML = `
-      <span>${item.name} x${item.qty}</span>
-      <span>${(item.price * item.qty).toLocaleString()} so‘m</span>
+      <img src="${item.img}" alt="${item.name}">
+      <div class="cart-item-info">
+        <div class="cart-item-name">${item.name}</div>
+        <div class="cart-item-price">${(item.price * item.qty).toLocaleString()} so‘m</div>
+      </div>
+      <div class="cart-item-controls">
+        <div class="cart-item-qty">
+          <button data-idx="${idx}" data-act="-">−</button>
+          <span>${item.qty}</span>
+          <button data-idx="${idx}" data-act="+">+</button>
+        </div>
+        <button class="cart-item-delete" data-idx="${idx}">
+          <svg viewBox="0 0 24 24"><path d="M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z"/></svg>
+        </button>
+      </div>
     `;
     cartList.appendChild(div);
   });
@@ -100,25 +125,32 @@ function renderCart() {
   cartTotal.textContent = `Umumiy: ${total.toLocaleString()} so‘m`;
 }
 
+// ===== CART QTY +/- & DELETE =====
+cartList.addEventListener('click', e => {
+  const idx = e.target.dataset.idx;
+  if (idx === undefined) return;
+  const i = parseInt(idx);
+  if (e.target.dataset.act === '+') cart[i].qty++;
+  if (e.target.dataset.act === '-') {
+    cart[i].qty = Math.max(1, cart[i].qty - 1);
+  }
+  if (e.target.closest('.cart-item-delete')) cart.splice(i, 1);
+  renderCart();
+});
+
 // ===== ORDER FLOW =====
 orderBtn.addEventListener('click', () => {
   if (!cart.length) return alert('Savat bo‘sh!');
-
-  // 1) check profile
   const saved = localStorage.getItem('bodrumProfile');
   if (!saved) return openProfModal();
   const { name, phone } = JSON.parse(saved);
   if (!name || !phone) return openProfModal();
-
-  // 2) get location
   getLocationAndFinish();
 });
 
 function getLocationAndFinish() {
-  // loading
   cartList.innerHTML = '<div class="loader"></div>';
   cartTotal.textContent = 'Joylashuv aniqlanmoqda...';
-
   if (!navigator.geolocation) return finishOrder(null);
   navigator.geolocation.getCurrentPosition(
     pos => finishOrder({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
@@ -162,7 +194,7 @@ function renderOrders() {
   `).join('');
 }
 
-// ===== PROFILE SAVE (inside profile page) =====
+// ===== PROFILE SAVE =====
 document.getElementById('saveProf').addEventListener('click', () => {
   const name  = document.getElementById('inpName').value.trim();
   const phone = document.getElementById('inpPhone').value.trim();
@@ -172,5 +204,4 @@ document.getElementById('saveProf').addEventListener('click', () => {
 });
 
 // ===== INIT =====
-loadProfile();
 renderOrders();
