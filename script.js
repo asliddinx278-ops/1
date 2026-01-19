@@ -1,3 +1,5 @@
+import { saveProfileDB, getProfileDB, addOrderDB, getOrdersDB } from './db.js';
+
 // ===== TAB SWITCH =====
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
@@ -17,19 +19,21 @@ const modalSave   = document.getElementById('modalSave');
 function openProfModal() { profModal.classList.add('show'); }
 function closeProfModal() { profModal.classList.remove('show'); }
 
-modalSave.addEventListener('click', () => {
+modalSave.addEventListener('click', async () => {
   const name  = modalName.value.trim();
   const phone = modalPhone.value.trim();
   if (!name || !phone) return alert('Iltimos, hammasini to‘ldiring!');
-  saveProfile(name, phone);
+  await saveProfileDB({ name, phone });
+  renderProfile();
   closeProfModal();
   getLocationAndFinish();
 });
 
-function saveProfile(name, phone) {
-  localStorage.setItem('bodrumProfile', JSON.stringify({ name, phone }));
-  document.getElementById('inpName').value  = name;
-  document.getElementById('inpPhone').value = phone;
+// ===== PROFILE RENDER =====
+async function renderProfile() {
+  const p = await getProfileDB();
+  document.getElementById('inpName').value  = p?.name  || '';
+  document.getElementById('inpPhone').value = p?.phone || '';
 }
 
 // ===== CART =====
@@ -61,7 +65,7 @@ menu.forEach(item => {
   menuGrid.appendChild(card);
 });
 
-// ===== ADD TO CART (1 dona, porsiya tanlash yo‘q) =====
+// ===== ADD TO CART (1pc) =====
 menuGrid.addEventListener('click', e => {
   if (e.target.classList.contains('add-btn-only')) {
     const id = parseInt(e.target.dataset.id);
@@ -116,12 +120,10 @@ cartList.addEventListener('click', e => {
 });
 
 // ===== ORDER FLOW =====
-orderBtn.addEventListener('click', () => {
+orderBtn.addEventListener('click', async () => {
   if (!cart.length) return alert('Savat bo‘sh!');
-  const saved = localStorage.getItem('bodrumProfile');
-  if (!saved) return openProfModal();
-  const { name, phone } = JSON.parse(saved);
-  if (!name || !phone) return openProfModal();
+  const p = await getProfileDB();
+  if (!p || !p.name || !p.phone) return openProfModal();
   getLocationAndFinish();
 });
 
@@ -135,11 +137,11 @@ function getLocationAndFinish() {
   );
 }
 
-function finishOrder(location) {
-  const { name, phone } = JSON.parse(localStorage.getItem('bodrumProfile'));
+async function finishOrder(location) {
+  const p = await getProfileDB();
   const items = cart.map(i => `${i.name} x${i.qty}`).join(', ');
   const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const orderText = `👤 ${name} | 📞 +998${phone}\n📦 ${items}\n💰 Jami: ${total.toLocaleString()} so‘m` +
+  const orderText = `👤 ${p.name} | 📞 +998${p.phone}\n📦 ${items}\n💰 Jami: ${total.toLocaleString()} so‘m` +
                     (location ? `\n📍 https://maps.google.com/?q=${location.lat},${location.lng}` : '');
 
   if (window.Telegram && window.Telegram.WebApp) {
@@ -147,20 +149,15 @@ function finishOrder(location) {
   } else {
     alert('Buyurtma qabul qilindi!\n' + orderText);
   }
-  saveOrder(orderText);
+  await addOrderDB({ text: orderText, date: new Date().toLocaleString('uz') });
   cart = [];
   renderCart();
-}
-
-function saveOrder(text) {
-  const orders = JSON.parse(localStorage.getItem('bodrumOrders') || '[]');
-  orders.unshift({ text, date: new Date().toLocaleString('uz') });
-  localStorage.setItem('bodrumOrders', JSON.stringify(orders));
   renderOrders();
 }
 
-function renderOrders() {
-  const orders = JSON.parse(localStorage.getItem('bodrumOrders') || '[]');
+// ===== ORDERS RENDER =====
+async function renderOrders() {
+  const orders = await getOrdersDB();
   const list = document.getElementById('ordersList');
   if (!orders.length) return list.innerHTML = 'Hali buyurtma yo‘q';
   list.innerHTML = orders.map(o => `
@@ -172,13 +169,14 @@ function renderOrders() {
 }
 
 // ===== PROFILE SAVE =====
-document.getElementById('saveProf').addEventListener('click', () => {
+document.getElementById('saveProf').addEventListener('click', async () => {
   const name  = document.getElementById('inpName').value.trim();
   const phone = document.getElementById('inpPhone').value.trim();
   if (!name || !phone) return alert('Iltimos, hammasini to‘ldiring!');
-  saveProfile(name, phone);
+  await saveProfileDB({ name, phone });
   alert('✅ Saqlangan!');
 });
 
 // ===== INIT =====
+renderProfile();
 renderOrders();
