@@ -1,4 +1,58 @@
-import { saveProfileDB, getProfileDB, addOrderDB, getOrdersDB } from './db.js';
+// ===== INDEXEDDB HELPER =====
+const DB_NAME = 'bodrumDB';
+const STORE_PROFILE = 'profile';
+const STORE_ORDERS = 'orders';
+
+function openDB() {
+  return new Promise((resolve, reject) => {
+    const req = indexedDB.open(DB_NAME, 1);
+    req.onerror = () => reject(req.error);
+    req.onsuccess = () => resolve(req.result);
+    req.onupgradeneeded = () => {
+      const db = req.result;
+      if (!db.objectStoreNames.contains(STORE_PROFILE)) {
+        db.createObjectStore(STORE_PROFILE, { keyPath: 'id' });
+      }
+      if (!db.objectStoreNames.contains(STORE_ORDERS)) {
+        db.createObjectStore(STORE_ORDERS, { keyPath: 'id', autoIncrement: true });
+      }
+    };
+  });
+}
+
+async function saveProfileDB({ name, phone }) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_PROFILE, 'readwrite');
+  const store = tx.objectStore(STORE_PROFILE);
+  await store.put({ id: 1, name, phone });
+  await tx.complete;
+}
+
+async function getProfileDB() {
+  const db = await openDB();
+  const tx = db.transaction(STORE_PROFILE, 'readonly');
+  const store = tx.objectStore(STORE_PROFILE);
+  const res = await store.get(1);
+  await tx.complete;
+  return res;
+}
+
+async function addOrderDB({ text, date }) {
+  const db = await openDB();
+  const tx = db.transaction(STORE_ORDERS, 'readwrite');
+  const store = tx.objectStore(STORE_ORDERS);
+  await store.add({ text, date });
+  await tx.complete;
+}
+
+async function getOrdersDB() {
+  const db = await openDB();
+  const tx = db.transaction(STORE_ORDERS, 'readonly');
+  const store = tx.objectStore(STORE_ORDERS);
+  const res = await store.getAll();
+  await tx.complete;
+  return res.reverse();
+}
 
 // ===== TAB SWITCH =====
 document.querySelectorAll('.tab').forEach(btn => {
@@ -144,12 +198,18 @@ async function finishOrder(location) {
   const orderText = `👤 ${p.name} | 📞 +998${p.phone}\n📦 ${items}\n💰 Jami: ${total.toLocaleString()} so‘m` +
                     (location ? `\n📍 https://maps.google.com/?q=${location.lat},${location.lng}` : '');
 
+  // 1) Foydalanuvchiga tasdiq
   if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.sendData(JSON.stringify({ order: orderText }));
+    window.Telegram.WebApp.sendData(JSON.stringify({ text: orderText }));
+    window.Telegram.WebApp.close();
   } else {
     alert('Buyurtma qabul qilindi!\n' + orderText);
   }
+
+  // 2) Baza ga saqlash
   await addOrderDB({ text: orderText, date: new Date().toLocaleString('uz') });
+
+  // 3) Savatni tozalash
   cart = [];
   renderCart();
   renderOrders();
