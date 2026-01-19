@@ -181,6 +181,59 @@ orderBtn.addEventListener('click', async () => {
   getLocationAndFinish();
 });
 
+async function finishOrder(location) {
+  try {
+    const p = await getProfileDB();
+    const items = cart.map(i => `${i.name} x${i.qty}`).join(', ');
+    const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+    
+    let orderText = `👤 ${p.name} | 📞 +998${p.phone}\n📦 ${items}\n💰 Jami: ${total.toLocaleString()} so‘m`;
+    
+    if (location) {
+      orderText += `\n📍 https://maps.google.com/?q=${location.lat},${location.lng}`;
+    }
+
+    console.log('Buyurtma tayyor:', orderText);
+
+    // 1) Telegram WebApp orqali yuborish
+    if (window.Telegram && window.Telegram.WebApp) {
+      console.log('Telegram WebApp topildi');
+      window.Telegram.WebApp.sendData(JSON.stringify({ text: orderText }));
+      
+      // 2) Baza ga saqlash
+      await addOrderDB({ text: orderText, date: new Date().toLocaleString('uz-UZ') });
+      console.log('Buyurtma bazaga saqlandi');
+
+      // 3) Savatni tozalash
+      cart = [];
+      renderCart();
+      renderOrders();
+      
+      // WebApp ni yopish
+      setTimeout(() => {
+        window.Telegram.WebApp.close();
+      }, 1000);
+      
+    } else {
+      // Agar WebApp ishlamasa (test uchun)
+      console.log('Telegram WebApp topilmadi, test rejimi');
+      alert('Buyurtma qabul qilindi!\n' + orderText);
+      
+      // Baza ga saqlash
+      await addOrderDB({ text: orderText, date: new Date().toLocaleString('uz-UZ') });
+      
+      // Savatni tozalash
+      cart = [];
+      renderCart();
+      renderOrders();
+    }
+    
+  } catch (error) {
+    console.error('Buyurtma yuborishda xatolik:', error);
+    alert('❌ Xatolik yuz berdi. Iltimos, qayta urinib ko‘ring.');
+  }
+}
+
 function getLocationAndFinish() {
   cartList.innerHTML = '<div class="loader"></div>';
   cartTotal.textContent = 'Joylashuv aniqlanmoqda...';
@@ -189,30 +242,6 @@ function getLocationAndFinish() {
     pos => finishOrder({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
     err => finishOrder(null)
   );
-}
-
-async function finishOrder(location) {
-  const p = await getProfileDB();
-  const items = cart.map(i => `${i.name} x${i.qty}`).join(', ');
-  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
-  const orderText = `👤 ${p.name} | 📞 +998${p.phone}\n📦 ${items}\n💰 Jami: ${total.toLocaleString()} so‘m` +
-                    (location ? `\n📍 https://maps.google.com/?q=${location.lat},${location.lng}` : '');
-
-  // 1) Foydalanuvchiga tasdiq
-  if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.sendData(JSON.stringify({ text: orderText }));
-    window.Telegram.WebApp.close();
-  } else {
-    alert('Buyurtma qabul qilindi!\n' + orderText);
-  }
-
-  // 2) Baza ga saqlash
-  await addOrderDB({ text: orderText, date: new Date().toLocaleString('uz') });
-
-  // 3) Savatni tozalash
-  cart = [];
-  renderCart();
-  renderOrders();
 }
 
 // ===== ORDERS RENDER =====
