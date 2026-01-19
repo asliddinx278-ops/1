@@ -56,49 +56,19 @@ menu.forEach(item => {
     <img src="${item.img}" alt="${item.name}">
     <h3>${item.name}</h3>
     <div class="price">${item.price.toLocaleString()} so‘m</div>
-    <div class="add-line" id="line-${item.id}">
-      <button class="add-btn-only" data-id="${item.id}">Savatchaga</button>
-      <div class="qty-bar" id="qty-bar-${item.id}">
-        <button class="qty-btn" data-id="${item.id}" data-act="-">−</button>
-        <span class="qty-val" id="qty-${item.id}">1</span>
-        <button class="qty-btn" data-id="${item.id}" data-act="+">+</button>
-      </div>
-    </div>
+    <button class="add-btn-only" data-id="${item.id}">Savatchaga</button>
   `;
   menuGrid.appendChild(card);
 });
 
-// ===== SHOW QTY BAR =====
-function showQtyBar(id) {
-  const line   = document.getElementById(`line-${id}`);
-  const btn    = line.querySelector('.add-btn-only');
-  const qtyBar = line.querySelector('.qty-bar');
-  btn.style.display = 'none';
-  qtyBar.style.display = 'flex';
-}
-
-// ===== MENU QTY +/- =====
-menuGrid.addEventListener('click', e => {
-  const id = e.target.dataset.id;
-  if (!id) return;
-  const qtyEl = document.getElementById(`qty-${id}`);
-  let qty = parseInt(qtyEl.textContent);
-  if (e.target.dataset.act === '+') qty++;
-  if (e.target.dataset.act === '-') qty = Math.max(1, qty - 1);
-  qtyEl.textContent = qty;
-});
-
-// ===== ADD TO CART (first click shows qty, second adds) =====
+// ===== ADD TO CART (1 dona, porsiya tanlash yo‘q) =====
 menuGrid.addEventListener('click', e => {
   if (e.target.classList.contains('add-btn-only')) {
     const id = parseInt(e.target.dataset.id);
-    showQtyBar(id);
-    // auto-add 1pc
-    const qty = parseInt(document.getElementById(`qty-${id}`).textContent);
     const product = menu.find(p => p.id === id);
     const existing = cart.find(c => c.id === id);
-    if (existing) existing.qty += qty;
-    else cart.push({ ...product, qty });
+    if (existing) existing.qty += 1;
+    else cart.push({ ...product, qty: 1 });
     renderCart();
   }
 });
