@@ -8,7 +8,43 @@ document.querySelectorAll('.tab').forEach(btn => {
   });
 });
 
-// ===== MENU & CART (OLD) =====
+// ===== MODAL ELEMENTS =====
+const profModal   = document.getElementById('profModal');
+const modalName   = document.getElementById('modalName');
+const modalPhone  = document.getElementById('modalPhone');
+const modalSave   = document.getElementById('modalSave');
+
+// ===== PROFILE LOAD / SAVE =====
+function loadProfile() {
+  const saved = localStorage.getItem('bodrumProfile');
+  if (saved) {
+    const { name, phone } = JSON.parse(saved);
+    document.getElementById('inpName').value  = name;
+    document.getElementById('inpPhone').value = phone;
+    modalName.value  = name;
+    modalPhone.value = phone;
+  }
+}
+function saveProfile(name, phone) {
+  localStorage.setItem('bodrumProfile', JSON.stringify({ name, phone }));
+  document.getElementById('inpName').value  = name;
+  document.getElementById('inpPhone').value = phone;
+}
+
+// ===== MODAL OPEN / CLOSE =====
+function openProfModal() { profModal.classList.add('show'); }
+function closeProfModal() { profModal.classList.remove('show'); }
+
+modalSave.addEventListener('click', () => {
+  const name  = modalName.value.trim();
+  const phone = modalPhone.value.trim();
+  if (!name || !phone) return alert('Iltimos, hammasini to‘ldiring!');
+  saveProfile(name, phone);
+  closeProfModal();
+  getLocationAndFinish();
+});
+
+// ===== CART & ORDER =====
 const menuGrid = document.getElementById('menuGrid');
 const cartList = document.getElementById('cartList');
 const cartBadge = document.getElementById('cartBadge');
@@ -64,59 +100,77 @@ function renderCart() {
   cartTotal.textContent = `Umumiy: ${total.toLocaleString()} so‘m`;
 }
 
+// ===== ORDER FLOW =====
 orderBtn.addEventListener('click', () => {
   if (!cart.length) return alert('Savat bo‘sh!');
-  const order = cart.map(i => `${i.name} x${i.qty}`).join(', ') +
-                `\nJami: ${cart.reduce((s,i)=>s+i.price*i.qty,0).toLocaleString()} so‘m`;
-  if (window.Telegram && window.Telegram.WebApp) {
-    window.Telegram.WebApp.sendData(JSON.stringify({ order }));
-    // saqlaymiz
-    saveOrder(order);
-  } else {
-    alert('Buyurtma:\n' + order);
-    saveOrder(order);
-  }
-});
 
-// ===== PROFIL =====
-const inpName  = document.getElementById('inpName');
-const inpPhone = document.getElementById('inpPhone');
-const saveBtn  = document.getElementById('saveProf');
-const ordersList = document.getElementById('ordersList');
-
-// yuklash
-window.addEventListener('DOMContentLoaded', () => {
+  // 1) check profile
   const saved = localStorage.getItem('bodrumProfile');
-  if (saved) {
-    const { name, phone } = JSON.parse(saved);
-    inpName.value  = name  || '';
-    inpPhone.value = phone || '';
+  if (!saved) return openProfModal();
+  const { name, phone } = JSON.parse(saved);
+  if (!name || !phone) return openProfModal();
+
+  // 2) get location
+  getLocationAndFinish();
+});
+
+function getLocationAndFinish() {
+  // loading
+  cartList.innerHTML = '<div class="loader"></div>';
+  cartTotal.textContent = 'Joylashuv aniqlanmoqda...';
+
+  if (!navigator.geolocation) return finishOrder(null);
+  navigator.geolocation.getCurrentPosition(
+    pos => finishOrder({ lat: pos.coords.latitude, lng: pos.coords.longitude }),
+    err => finishOrder(null)
+  );
+}
+
+function finishOrder(location) {
+  const { name, phone } = JSON.parse(localStorage.getItem('bodrumProfile'));
+  const items = cart.map(i => `${i.name} x${i.qty}`).join(', ');
+  const total = cart.reduce((s, i) => s + i.price * i.qty, 0);
+  const orderText = `👤 ${name} | 📞 +998${phone}\n📦 ${items}\n💰 Jami: ${total.toLocaleString()} so‘m` +
+                    (location ? `\n📍 https://maps.google.com/?q=${location.lat},${location.lng}` : '');
+
+  if (window.Telegram && window.Telegram.WebApp) {
+    window.Telegram.WebApp.sendData(JSON.stringify({ order: orderText }));
+  } else {
+    alert('Buyurtma qabul qilindi!\n' + orderText);
   }
-  renderOrders();
-});
+  saveOrder(orderText);
+  cart = [];
+  renderCart();
+}
 
-saveBtn.addEventListener('click', () => {
-  const name  = inpName.value.trim();
-  const phone = inpPhone.value.trim();
-  if (!name || !phone) return alert('Iltimos, hammasini to‘ldiring!');
-  localStorage.setItem('bodrumProfile', JSON.stringify({ name, phone }));
-  alert('Saql ✅');
-});
-
-// buyurtmalarni saqlash & ko‘rsatish
 function saveOrder(text) {
   const orders = JSON.parse(localStorage.getItem('bodrumOrders') || '[]');
   orders.unshift({ text, date: new Date().toLocaleString('uz') });
   localStorage.setItem('bodrumOrders', JSON.stringify(orders));
   renderOrders();
 }
+
 function renderOrders() {
   const orders = JSON.parse(localStorage.getItem('bodrumOrders') || '[]');
-  if (!orders.length) return ordersList.innerHTML = 'Hali buyurtma yo‘q';
-  ordersList.innerHTML = orders.map(o => `
+  const list = document.getElementById('ordersList');
+  if (!orders.length) return list.innerHTML = 'Hali buyurtma yo‘q';
+  list.innerHTML = orders.map(o => `
     <div class="order-item">
-      <div>${o.text}</div>
+      <div>${o.text.replace(/\n/g, '<br>')}</div>
       <div class="order-date">${o.date}</div>
     </div>
   `).join('');
 }
+
+// ===== PROFILE SAVE (inside profile page) =====
+document.getElementById('saveProf').addEventListener('click', () => {
+  const name  = document.getElementById('inpName').value.trim();
+  const phone = document.getElementById('inpPhone').value.trim();
+  if (!name || !phone) return alert('Iltimos, hammasini to‘ldiring!');
+  saveProfile(name, phone);
+  alert('✅ Saqlangan!');
+});
+
+// ===== INIT =====
+loadProfile();
+renderOrders();
