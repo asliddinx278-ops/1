@@ -1,7 +1,17 @@
-// script.js
+// tab switch
+document.querySelectorAll('.tab').forEach(btn => {
+  btn.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(btn.dataset.tab).classList.add('active');
+  });
+});
+
+// menu & cart logic
 const menuGrid = document.getElementById('menuGrid');
 const cartList = document.getElementById('cartList');
-const cartCount = document.getElementById('cartCount');
+const cartBadge = document.getElementById('cartBadge');
 const cartTotal = document.getElementById('cartTotal');
 const orderBtn = document.getElementById('orderBtn');
 
@@ -14,17 +24,6 @@ const menu = [
   { id: 4, name: 'Klyukva-Burger',        price: 44000, img: 'https://i.imgur.com/4.jpg' },
 ];
 
-// Tab almashish
-document.querySelectorAll('.tab').forEach(btn => {
-  btn.addEventListener('click', () => {
-    document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
-    document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
-    btn.classList.add('active');
-    document.getElementById(btn.dataset.tab).classList.add('active');
-  });
-});
-
-// Menu kartochkalarini yaratish
 menu.forEach(item => {
   const card = document.createElement('div');
   card.className = 'card';
@@ -37,7 +36,6 @@ menu.forEach(item => {
   menuGrid.appendChild(card);
 });
 
-// Savatchaga qo‘shish
 menuGrid.addEventListener('click', e => {
   if (e.target.tagName === 'BUTTON') {
     const id = parseInt(e.target.dataset.id);
@@ -62,11 +60,10 @@ function renderCart() {
     `;
     cartList.appendChild(div);
   });
-  cartCount.textContent = cart.reduce((s, i) => s + i.qty, 0);
+  cartBadge.textContent = cart.reduce((s, i) => s + i.qty, 0);
   cartTotal.textContent = `Umumiy: ${total.toLocaleString()} so‘m`;
 }
 
-// Buyurtma yuborish
 orderBtn.addEventListener('click', () => {
   if (!cart.length) return alert('Savat bo‘sh!');
   const order = cart.map(i => `${i.name} x${i.qty}`).join(', ') +
