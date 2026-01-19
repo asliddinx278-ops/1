@@ -56,17 +56,26 @@ menu.forEach(item => {
     <img src="${item.img}" alt="${item.name}">
     <h3>${item.name}</h3>
     <div class="price">${item.price.toLocaleString()} so‘m</div>
-    <div class="add-line">
-      <div class="qty-bar">
+    <div class="add-line" id="line-${item.id}">
+      <button class="add-btn-only" data-id="${item.id}">Savatchaga</button>
+      <div class="qty-bar" id="qty-bar-${item.id}">
         <button class="qty-btn" data-id="${item.id}" data-act="-">−</button>
         <span class="qty-val" id="qty-${item.id}">1</span>
         <button class="qty-btn" data-id="${item.id}" data-act="+">+</button>
       </div>
-      <button class="add-btn" data-id="${item.id}">Savatchaga</button>
     </div>
   `;
   menuGrid.appendChild(card);
 });
+
+// ===== SHOW QTY BAR =====
+function showQtyBar(id) {
+  const line   = document.getElementById(`line-${id}`);
+  const btn    = line.querySelector('.add-btn-only');
+  const qtyBar = line.querySelector('.qty-bar');
+  btn.style.display = 'none';
+  qtyBar.style.display = 'flex';
+}
 
 // ===== MENU QTY +/- =====
 menuGrid.addEventListener('click', e => {
@@ -79,22 +88,22 @@ menuGrid.addEventListener('click', e => {
   qtyEl.textContent = qty;
 });
 
-// ===== ADD TO CART =====
+// ===== ADD TO CART (first click shows qty, second adds) =====
 menuGrid.addEventListener('click', e => {
-  if (e.target.classList.contains('add-btn')) {
+  if (e.target.classList.contains('add-btn-only')) {
     const id = parseInt(e.target.dataset.id);
+    showQtyBar(id);
+    // auto-add 1pc
     const qty = parseInt(document.getElementById(`qty-${id}`).textContent);
     const product = menu.find(p => p.id === id);
     const existing = cart.find(c => c.id === id);
     if (existing) existing.qty += qty;
     else cart.push({ ...product, qty });
     renderCart();
-    // reset qty to 1
-    document.getElementById(`qty-${id}`).textContent = 1;
   }
 });
 
-// ===== RENDER CART (rasmdagidek) =====
+// ===== RENDER CART =====
 function renderCart() {
   cartList.innerHTML = '';
   let total = 0;
@@ -131,9 +140,7 @@ cartList.addEventListener('click', e => {
   if (idx === undefined) return;
   const i = parseInt(idx);
   if (e.target.dataset.act === '+') cart[i].qty++;
-  if (e.target.dataset.act === '-') {
-    cart[i].qty = Math.max(1, cart[i].qty - 1);
-  }
+  if (e.target.dataset.act === '-') cart[i].qty = Math.max(1, cart[i].qty - 1);
   if (e.target.closest('.cart-item-delete')) cart.splice(i, 1);
   renderCart();
 });
