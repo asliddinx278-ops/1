@@ -2,11 +2,9 @@
 * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Arial', sans-serif; }
 body { background: #fafafa; display: flex; flex-direction: column; height: 100vh; }
 
-/* ===== BRAND ===== */
 .brand { text-align: center; font-size: 32px; font-weight: 800; color: #ff6600; padding: 20px 0 10px; animation: slideUp .6s ease-out; }
 @keyframes slideUp { from { transform: translateY(100px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
 
-/* ===== TABS ===== */
 main { flex: 1; overflow-y: auto; }
 .tab-content { display: none; }
 .tab-content.active { display: block; }
@@ -18,7 +16,6 @@ main { flex: 1; overflow-y: auto; }
 .tab.active::after { content: ''; position: absolute; bottom: 0; left: 20%; right: 20%; height: 3px; background: #ff6600; border-radius: 2px; }
 #cartBadge { position: absolute; top: 4px; right: 20%; background: #ff6600; color: #fff; font-size: 10px; min-width: 16px; height: 16px; border-radius: 8px; display: flex; align-items: center; justify-content: center; }
 
-/* ===== MENU GRID ===== */
 .menu-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 12px; padding: 12px; }
 .card { background: #fff; border-radius: 12px; box-shadow: 0 4px 12px rgba(0,0,0,.08); padding: 12px; opacity: 0; transform: translateY(60px); animation: up .5s ease-out forwards; }
 .card:nth-child(1) { animation-delay: .1s; }
@@ -30,14 +27,42 @@ main { flex: 1; overflow-y: auto; }
 .card h3 { font-size: 15px; margin: 8px 0 4px; }
 .card .price { font-size: 17px; font-weight: bold; color: #ff6600; margin-bottom: 8px; }
 
-/* ADD TO CART from Menu */
-.card .add-line { display: flex; align-items: center; gap: 8px; margin-top: 8px; }
-.card .qty-bar { display: flex; align-items: center; gap: 6px; flex: 1; }
-.card .qty-btn { width: 28px; height: 28px; border: none; border-radius: 50%; background: #ff6600; color: #fff; font-size: 18px; cursor: pointer; }
-.card .qty-val { font-size: 16px; min-width: 24px; text-align: center; }
-.card .add-btn { flex: 1; background: #ff6600; color: #fff; border: none; padding: 8px 0; border-radius: 6px; cursor: pointer; }
+/* ===== ADD LINE (initially only button) ===== */
+.card .add-line { margin-top: 8px; }
+.card .add-btn-only {
+  width: 100%;
+  background: linear-gradient(90deg, #ff6600 0%, #ff8533 100%);
+  color: #fff;
+  border: none;
+  padding: 10px 0;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(255,102,0,.25);
+  transition: .3s;
+}
+.card .add-btn-only:active { transform: scale(.98); }
 
-/* ===== CART LIST (rasmdagidek) ===== */
+/* ===== QTY BAR (hidden by default) ===== */
+.card .qty-bar {
+  display: none;
+  align-items: center;
+  gap: 8px;
+}
+.card .qty-btn {
+  width: 28px;
+  height: 28px;
+  border: none;
+  border-radius: 50%;
+  background: #ff6600;
+  color: #fff;
+  font-size: 18px;
+  cursor: pointer;
+}
+.card .qty-val { font-size: 16px; min-width: 24px; text-align: center; }
+
+/* ===== CART LIST ===== */
 .cart-list { margin: 12px; }
 .cart-item {
   background: #fff;
@@ -65,7 +90,7 @@ main { flex: 1; overflow-y: auto; }
 #cartTotal { font-weight: bold; margin: 0 12px 12px; font-size: 18px; }
 #orderBtn { margin: 0 12px 24px; width: calc(100% - 24px); background: linear-gradient(90deg, #ff6600 0%, #ff8533 100%); color: #fff; border: none; padding: 12px; border-radius: 12px; cursor: pointer; font-size: 16px; font-weight: 600; box-shadow: 0 4px 16px rgba(255,102,0,.3); }
 
-/* ===== MODAL & INPUT GROUP (floating label) ===== */
+/* ===== MODAL ===== */
 .modal-overlay { position: fixed; inset: 0; background: rgba(0,0,0,.45); backdrop-filter: blur(4px); display: none; align-items: center; justify-content: center; z-index: 999; }
 .modal-overlay.show { display: flex; }
 .modal-box { background: linear-gradient(145deg, #fff 0%, #f2f2f2 100%); border-radius: 24px; width: 90%; max-width: 360px; padding: 28px 24px; box-shadow: 0 12px 40px rgba(0,0,0,.2); animation: up .5s ease; }
@@ -87,6 +112,5 @@ main { flex: 1; overflow-y: auto; }
 .order-item { margin-bottom: 12px; padding-bottom: 8px; border-bottom: 1px solid #eee; }
 .order-date { font-size: 12px; color: #888; margin-top: 4px; }
 
-/* ===== ANIMATIONS ===== */
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes up { from { transform: translateY(60px); opacity: 0; } to { transform: translateY(0); opacity: 1; } }
