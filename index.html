@@ -2,13 +2,39 @@
 <html lang="uz">
 <head>
   <meta charset="utf-8"/>
-  <title>EVOS Menu</title>
+  <title>BODRUM Menu</title>
   <link rel="stylesheet" href="style.css"/>
 </head>
 <body>
-  <h1>EVOS Menu</h1>
+  <header>
+    <h1>BODRUM</h1>
+  </header>
 
-  <div class="menu-grid" id="menuGrid"></div>
+  <!-- 3 ta bo‘lim -->
+  <nav class="tabs">
+    <button class="tab active" data-tab="menu">Menu</button>
+    <button class="tab" data-tab="cart">Savat <span id="cartCount">0</span></button>
+    <button class="tab" data-tab="profile">Profil</button>
+  </nav>
+
+  <main id="content">
+    <!-- Menu bo‘limi -->
+    <section id="menu" class="tab-content active">
+      <div class="menu-grid" id="menuGrid"></div>
+    </section>
+
+    <!-- Savat bo‘limi -->
+    <section id="cart" class="tab-content">
+      <div id="cartList"></div>
+      <div id="cartTotal">Umumiy: 0 so‘m</div>
+      <button id="orderBtn">Buyurtma berish</button>
+    </section>
+
+    <!-- Profil bo‘limi -->
+    <section id="profile" class="tab-content">
+      <p>Xush kelibsiz! Bu yerda shaxsiy ma’lumotlar bo‘ladi.</p>
+    </section>
+  </main>
 
   <script src="script.js" type="module"></script>
 </body>
