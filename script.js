@@ -1,4 +1,4 @@
-// tab switch
+// ===== TAB SWITCH =====
 document.querySelectorAll('.tab').forEach(btn => {
   btn.addEventListener('click', () => {
     document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
@@ -8,7 +8,7 @@ document.querySelectorAll('.tab').forEach(btn => {
   });
 });
 
-// menu & cart logic
+// ===== MENU & CART (OLD) =====
 const menuGrid = document.getElementById('menuGrid');
 const cartList = document.getElementById('cartList');
 const cartBadge = document.getElementById('cartBadge');
@@ -70,8 +70,53 @@ orderBtn.addEventListener('click', () => {
                 `\nJami: ${cart.reduce((s,i)=>s+i.price*i.qty,0).toLocaleString()} so‘m`;
   if (window.Telegram && window.Telegram.WebApp) {
     window.Telegram.WebApp.sendData(JSON.stringify({ order }));
-    window.Telegram.WebApp.close();
+    // saqlaymiz
+    saveOrder(order);
   } else {
     alert('Buyurtma:\n' + order);
+    saveOrder(order);
   }
 });
+
+// ===== PROFIL =====
+const inpName  = document.getElementById('inpName');
+const inpPhone = document.getElementById('inpPhone');
+const saveBtn  = document.getElementById('saveProf');
+const ordersList = document.getElementById('ordersList');
+
+// yuklash
+window.addEventListener('DOMContentLoaded', () => {
+  const saved = localStorage.getItem('bodrumProfile');
+  if (saved) {
+    const { name, phone } = JSON.parse(saved);
+    inpName.value  = name  || '';
+    inpPhone.value = phone || '';
+  }
+  renderOrders();
+});
+
+saveBtn.addEventListener('click', () => {
+  const name  = inpName.value.trim();
+  const phone = inpPhone.value.trim();
+  if (!name || !phone) return alert('Iltimos, hammasini to‘ldiring!');
+  localStorage.setItem('bodrumProfile', JSON.stringify({ name, phone }));
+  alert('Saql ✅');
+});
+
+// buyurtmalarni saqlash & ko‘rsatish
+function saveOrder(text) {
+  const orders = JSON.parse(localStorage.getItem('bodrumOrders') || '[]');
+  orders.unshift({ text, date: new Date().toLocaleString('uz') });
+  localStorage.setItem('bodrumOrders', JSON.stringify(orders));
+  renderOrders();
+}
+function renderOrders() {
+  const orders = JSON.parse(localStorage.getItem('bodrumOrders') || '[]');
+  if (!orders.length) return ordersList.innerHTML = 'Hali buyurtma yo‘q';
+  ordersList.innerHTML = orders.map(o => `
+    <div class="order-item">
+      <div>${o.text}</div>
+      <div class="order-date">${o.date}</div>
+    </div>
+  `).join('');
+}
